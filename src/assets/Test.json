@@ -1,0 +1,40 @@
+{
+  "title": "Test",
+  "description": "New Quiz test\n",
+  "pages": [
+    {
+      "title": "First Test Please Be advise Be honest ",
+      "questions": [
+        {
+          "question": "Test quiz",
+          "type": "field_text",
+          "required": true,
+          "options": [
+            ""
+          ],
+          "correctIndex": 0,
+          "correctAnswer": "",
+          "points": 3
+        },
+        {
+          "question": "Test 2",
+          "type": "radio",
+          "required": true,
+          "options": [
+            "yes",
+            "no"
+          ],
+          "correctIndex": 0,
+          "correctAnswer": "",
+          "points": 1
+        }
+      ],
+      "description": "test"
+    }
+  ],
+  "settings": {
+    "timeLimit": 0,
+    "allowAltTab": true,
+    "deadline": "2025-12-31T23:59"
+  }
+}

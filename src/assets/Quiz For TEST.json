@@ -1,0 +1,53 @@
+{
+  "title": "Quiz For TEST",
+  "pages": [
+    {
+      "title": "Page 1",
+      "questions": [
+        {
+          "question": "Test quiz",
+          "type": "field_text",
+          "required": true,
+          "options": [
+            ""
+          ],
+          "correctIndex": 0,
+          "correctAnswer": ""
+        },
+        {
+          "question": "Test For sum of 34+6/100",
+          "type": "radio",
+          "required": true,
+          "options": [
+            "100",
+            "0.4",
+            "4"
+          ],
+          "correctIndex": 0,
+          "correctAnswer": ""
+        }
+      ]
+    },
+    {
+      "title": "Page 2",
+      "questions": [
+        {
+          "question": "Enter the right answer 100-10/0.5",
+          "type": "checkbox",
+          "required": true,
+          "options": [
+            "80",
+            "75"
+          ],
+          "correctIndex": [],
+          "correctAnswer": ""
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "timeLimit": 60,
+    "allowAltTab": false,
+    "deadline": "2025-12-31T23:59"
+  }
+}
