@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Dashboard } from './component/Dashboard.jsx';
-import { Navbar } from './component/Navbar.jsx';
+import { InstructorDashboard } from './component/InstructorDashboard.jsx';
+import { InstructorNavbar } from './component/InstructorNavbar.jsx';
+import { StudentDashboard } from './component/Student/StudentDashboard.jsx';
+import { StudentNavbar } from './component/Student/StudentNavbar.jsx';
+import { StudentQuizView } from './component/Student/StudentQuizView.jsx';
+import { StudentResults } from './component/Student/StudentResults.jsx';
 import { Login } from './component/Login.jsx';
 import { Add_Quiz } from './component/Selection/Add_Quiz.jsx';
 import { View_Quiz } from './component/Selection/View_Quiz.jsx';
@@ -13,17 +18,14 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  
-  // Create a state for quizzes that loads from LocalStorage
   const [quizzes, setQuizzes] = useState([]);
 
-  // Load quizzes from "database" on startup
   useEffect(() => {
     const savedQuizzes = JSON.parse(localStorage.getItem("global_quizzes") || "[]");
     setQuizzes(savedQuizzes);
   }, []);
 
-  // Function to refresh quiz list (call this after adding a quiz)
+  // Function to refresh quiz list
   const refreshQuizzes = () => {
     const savedQuizzes = JSON.parse(localStorage.getItem("global_quizzes") || "[]");
     setQuizzes(savedQuizzes);
@@ -57,25 +59,73 @@ function App() {
           loginError={loginError}
           onLogin={handleLogin}
         />
-      ) : (
+      ) : currentUser.role === 'admin' ? (
+        // ========== INSTRUCTOR/ADMIN ROUTES ==========
         <>
-          <Navbar onLogout={handleLogout} /> 
+          <InstructorNavbar onLogout={handleLogout} />
           <div className="p-8">
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/" element={<Navigate to="/instructor-dashboard" />} />
+              
+              {/* Instructor Dashboard - View Student Results & Release Scores */}
+              <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
+              
+              {/* Manage Quizzes */}
               <Route path="/dashboard" element={
                 <Dashboard 
-                  quizzes={quizzes} // Pass the real quizzes state
-                  userName={currentUser.username} 
-                  userRole={currentUser.role} 
-                  onLogout={handleLogout} 
+                  quizzes={quizzes}
+                  userName={currentUser.username}
+                  userRole={currentUser.role}
                 />
               } />
-              {/* Pass the refresh function so Add_Quiz can tell App to update */}
+              
+              {/* Add Quiz */}
               <Route path="/add" element={<Add_Quiz onQuizAdded={refreshQuizzes} />} />
+              
+              {/* View Quiz */}
               <Route path="/view" element={<View_Quiz />} />
-              <Route path="/update" element={<div>Update Quiz Page</div>} />
-              <Route path="/violation" element={<div>Violation Tracking Page</div>} />
+              
+              {/* Update Quiz */}
+              <Route path="/update" element={<div className="text-center p-8">Update Quiz Page</div>} />
+              
+              {/* Violation Tracking */}
+              <Route path="/violation" element={<div className="text-center p-8">Violation Tracking Page</div>} />
+            </Routes>
+          </div>
+        </>
+      ) : (
+        // ========== STUDENT ROUTES ==========
+        <>
+          <StudentNavbar onLogout={handleLogout} userName={currentUser.name} />
+          <div className="p-8">
+            <Routes>
+              <Route path="/" element={<Navigate to="/student-dashboard" />} />
+              
+              {/* Student Dashboard - List of Quizzes to Take */}
+              <Route path="/student-dashboard" element={
+                <StudentDashboard 
+                  quizzes={quizzes}
+                  studentName={currentUser.name}
+                  studentId={currentUser.username}
+                />
+              } />
+              
+              {/* Take Quiz */}
+              <Route path="/student-quiz/:quizId" element={
+                <StudentQuizView 
+                  quizzes={quizzes}
+                  studentName={currentUser.name}
+                  studentId={currentUser.username}
+                />
+              } />
+              
+              {/* View Results */}
+              <Route path="/student-results" element={
+                <StudentResults 
+                  studentId={currentUser.username}
+                  studentName={currentUser.name}
+                />
+              } />
             </Routes>
           </div>
         </>

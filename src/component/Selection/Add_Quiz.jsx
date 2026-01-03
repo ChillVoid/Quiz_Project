@@ -6,6 +6,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
   const [step, setStep] = useState(0);
   const [quizTitle, setQuizTitle] = useState("");
   const [quizDescription, setQuizDescription] = useState("");
+  const [quizDuration, setQuizDuration] = useState(5); // Default: 5 minutes
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -21,7 +22,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
         title: "Page 1",
         description: "",
         questions: [
-          { question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 },
+          { id: 1, question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 },
         ],
       },
     ];
@@ -29,17 +30,17 @@ export const Add_Quiz = ({ onQuizAdded }) => {
 
   // Auto-save draft as user types
   useEffect(() => {
-    localStorage.setItem("quiz_draft", JSON.stringify({ quizTitle, quizDescription, pages }));
-  }, [quizTitle, quizDescription, pages]);
+    localStorage.setItem("quiz_draft", JSON.stringify({ quizTitle, quizDescription, quizDuration, pages }));
+  }, [quizTitle, quizDescription, quizDuration, pages]);
 
   /* == VALIDATION LOGIC == */
   const validateStep1 = () => {
-    if (!quizTitle.trim()) {
-      setErrors({ title: "Quiz title cannot be empty." });
-      return false;
-    }
-    setErrors({});
-    return true;
+    let newErrors = {};
+    if (!quizTitle.trim()) newErrors.title = "Quiz title cannot be empty.";
+    if (!quizDuration || quizDuration <= 0) newErrors.duration = "Duration must be at least 1 minute.";
+    if (quizDuration > 300) newErrors.duration = "Duration cannot exceed 300 minutes (5 hours).";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const validateBuilder = () => {
@@ -70,12 +71,14 @@ export const Add_Quiz = ({ onQuizAdded }) => {
 
     // 1. Prepare the Final Quiz Data
     const finalQuiz = {
-      id: Date.now(), // Unique ID for identification
+      id: Date.now(),
       title: quizTitle,
       description: quizDescription,
+      duration: quizDuration,
       pages: pages,
+      totalQuestions: pages.reduce((sum, p) => sum + (p.questions?.length || 0), 0),
       settings: { 
-        timeLimit: 0, 
+        timeLimit: quizDuration, 
         allowAltTab: true,
         createdAt: new Date().toLocaleString()
       }
@@ -86,14 +89,14 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     const updatedQuizzes = [...existingQuizzes, finalQuiz];
     localStorage.setItem("global_quizzes", JSON.stringify(updatedQuizzes));
     
-    // 3. Cleanup: Clear the current draft and active session
+    // 3. Cleanup
     localStorage.removeItem("quiz_draft");
     sessionStorage.setItem("active_quiz", JSON.stringify(finalQuiz));
 
-    alert("Quiz Published Successfully!");
+    alert("✅ Quiz Published Successfully!");
     
     // 4. Update Parent State & Navigate
-    if (onQuizAdded) onQuizAdded(); // Refresh the App.jsx quiz list
+    if (onQuizAdded) onQuizAdded();
     navigate("/dashboard"); 
   };
 
@@ -104,7 +107,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
       {
         title: `Page ${prev.length + 1}`,
         description: "",
-        questions: [{ question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 }],
+        questions: [{ id: Date.now(), question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 }],
       },
     ]);
     setCurrentPage(pages.length);
@@ -124,7 +127,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     setPages((prev) =>
       prev.map((p, i) =>
         i === currentPage
-          ? { ...p, questions: [...p.questions, { question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 }] }
+          ? { ...p, questions: [...p.questions, { id: Date.now(), question: "", type: "radio", required: true, options: [""], correctIndex: 0, correctAnswer: "", points: 1 }] }
           : p
       )
     );
@@ -238,6 +241,18 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     return pages.reduce((total, p) => total + p.questions.reduce((pageTotal, q) => pageTotal + (q.points || 0), 0), 0);
   };
 
+  const handleDurationChange = (e) => {
+    const value = parseInt(e.target.value) || 0;
+    // Automatically clamp between 1 and 300
+    if (value < 1) {
+      setQuizDuration(1);
+    } else if (value > 300) {
+      setQuizDuration(300);
+    } else {
+      setQuizDuration(value);
+    }
+  };
+
   const page = pages[currentPage];
 
   return (
@@ -248,7 +263,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
           <div className="text-center space-y-6">
             <h1 className="text-4xl font-bold">Quiz Builder</h1>
             <p className="text-gray-600">Create quizzes step-by-step for your students</p>
-            <button onClick={() => setStep(1)} className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg">
+            <button onClick={() => setStep(1)} className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-indigo-700 transition">
               CREATE
             </button>
           </div>
@@ -256,24 +271,46 @@ export const Add_Quiz = ({ onQuizAdded }) => {
 
         {step === 1 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Quiz Title & Intro</h2>
-            <input
-              value={quizTitle}
-              onChange={(e) => setQuizTitle(e.target.value)}
-              placeholder="Enter quiz title (Required)"
-              className={`w-full px-4 py-3 border rounded-lg ${errors.title ? "border-red-500" : ""}`}
-            />
-            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+            <h2 className="text-2xl font-bold">Quiz Title, Duration & Intro</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quiz Title *</label>
+              <input
+                value={quizTitle}
+                onChange={(e) => setQuizTitle(e.target.value)}
+                placeholder="Enter quiz title (Required)"
+                className={`w-full px-4 py-3 border rounded-lg ${errors.title ? "border-red-500" : ""}`}
+              />
+              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            </div>
             
-            <textarea
-              value={quizDescription}
-              onChange={(e) => setQuizDescription(e.target.value)}
-              placeholder="Enter quiz introduction (Optional)..."
-              className="w-full px-4 py-3 border rounded-lg h-32 resize-y"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
+              <input
+                type="number"
+                value={quizDuration}
+                onChange={handleDurationChange}
+                min="1"
+                max="300"
+                className={`w-full px-4 py-3 border rounded-lg ${errors.duration ? "border-red-500" : ""}`}
+                placeholder="Enter quiz duration (1-300 minutes)"
+              />
+              {errors.duration && <p className="text-red-500 text-sm mt-1">{errors.duration}</p>}
+              <p className="text-gray-500 text-xs mt-1">Range: 1-300 minutes (5 hours max)</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quiz Description (Optional)</label>
+              <textarea
+                value={quizDescription}
+                onChange={(e) => setQuizDescription(e.target.value)}
+                placeholder="Enter quiz introduction (Optional)..."
+                className="w-full px-4 py-3 border rounded-lg h-32 resize-y"
+              />
+            </div>
+            
             <div className="flex justify-between">
-              <button onClick={() => setStep(0)} className="text-gray-500">Back</button>
-              <button onClick={() => { if(validateStep1()) setStep(2) }} className="bg-indigo-600 text-white px-6 py-2 rounded">Next</button>
+              <button onClick={() => setStep(0)} className="text-gray-500 hover:text-gray-700 transition">Back</button>
+              <button onClick={() => { if(validateStep1()) setStep(2) }} className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">Next</button>
             </div>
           </div>
         )}
@@ -281,7 +318,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
         {step === 2 && (
           <div className="space-y-6">
             <div className="bg-indigo-100 p-4 rounded-lg text-center font-bold text-indigo-800">
-              Total Quiz Score: {calculateTotalScore()} points
+              Total Quiz Score: {calculateTotalScore()} points | Duration: {quizDuration} minutes
             </div>
 
             <div className="flex justify-between items-center mb-4">
@@ -290,15 +327,15 @@ export const Add_Quiz = ({ onQuizAdded }) => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i)}
-                    className={`px-4 py-1 rounded whitespace-nowrap ${i === currentPage ? "bg-indigo-600 text-white" : "bg-gray-200"}`}
+                    className={`px-4 py-1 rounded whitespace-nowrap ${i === currentPage ? "bg-indigo-600 text-white" : "bg-gray-200 hover:bg-gray-300"} transition`}
                   >
                     {p.title || `Page ${i + 1}`}
                   </button>
                 ))}
               </div>
               <div className="flex gap-2">
-                <button onClick={addPage} className="text-indigo-600 font-bold">+ Page</button>
-                <button onClick={() => removePage(currentPage)} className="text-red-500">- Page</button>
+                <button onClick={addPage} className="text-indigo-600 font-bold hover:text-indigo-700">+ Page</button>
+                <button onClick={() => removePage(currentPage)} className="text-red-500 hover:text-red-600" disabled={pages.length === 1}>- Page</button>
               </div>
             </div>
 
@@ -401,7 +438,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
                 + Add Question
               </button>
               <div className="space-x-4">
-                <button onClick={() => setStep(1)} className="text-gray-500">Back</button>
+                <button onClick={() => setStep(1)} className="text-gray-500 hover:text-gray-700">Back</button>
                 <button onClick={handleFinish} className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg shadow-md transition-colors font-bold">
                   FINISH & PUBLISH
                 </button>
