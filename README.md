@@ -96,16 +96,16 @@ The application emphasizes **academic integrity**, **user role separation**, and
 
 ## 👨‍👩‍👧‍👦 Team Members
 
-| Name |  
-|------|------|
-| Manansala, Ever Mae | 
-| Mañibo, Rhalp | 
-| Matavia, Angelo | 
-| Navarette, Kurt Eris |
-| Olivo, Paul Emmanuel | 
-| Omboy, Maria Princes |  
-| Pelone, John Dave | 
-| Petilla, Clarisse Jane | 
+# Name 
+
+ Manansala, Ever Mae 
+ Mañibo, Rhalp 
+ Matavia, Angelo 
+ Navarette, Kurt Eris 
+ Olivo, Paul Emmanuel 
+ Omboy, Maria Princes 
+ Pelone, John Dave 
+ Petilla, Clarisse Jane 
 
 ---
 
