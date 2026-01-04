@@ -1,292 +1,170 @@
-# React + Vite
+# 📘 DCIT 26 – Online Quiz Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📝 Project Description
 
-Currently, two official plugins are available:
+The **Online Quiz Application** is a web-based system developed as a final project for **DCIT 26**. It allows students to take a timed quiz under controlled conditions while enabling instructors to manage quiz results and release scores when appropriate.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The application emphasizes **academic integrity**, **user role separation**, and **clean UI/UX**, using modern web technologies such as **React**, **Vite**, and **TailwindCSS**.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎯 Project Objectives
 
-## Expanding the ESLint configuration
+- Build a functional quiz system using React
+- Prevent quiz retakes and minimize cheating behavior
+- Implement tab-switch / focus detection
+- Separate student and instructor functionalities
+- Deploy a working web application
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
 
-📁 Project Scope Reviewed
+## 👥 User Roles
 
-Main files involved
+### 👨‍🎓 Student
+- Take a timed quiz
+- Answer questions loaded from a local JSON or mock backend
+- Receive warnings when switching browser tabs or minimizing the window
+- Auto-submit the quiz after excessive violations
+- Wait for instructor approval before viewing scores
 
-App.jsx
+### 👩‍🏫 Instructor (Admin)
+- View student quiz submissions
+- Monitor scores, violations, and submission timestamps
+- Release quiz results to students
 
-Dashboard.jsx
+---
 
-Login.jsx
+## ✨ Core Features
 
-Navbar.jsx
+### 🧠 Student Features
 
-Selection/View_Quiz.jsx
+- **Timed Quiz**
+  - Visible countdown timer
+  - Questions loaded from JSON data
 
-Selection/Add_Quiz.jsx
+- **Quiz Retake Prevention**
+  - Detects if the quiz has already been taken
+  - Displays:
+    > *“You have already taken this quiz. Please wait for the instructor to release your score.”*
 
-Selection/Update_Quiz.jsx
+- **Tab Switch / Focus Detection**
+  - Detects tab switching or window minimization
+  - Displays warning popups
+  - Logs violations
+  - Automatically submits the quiz after reaching a violation threshold (e.g., 3)
 
-Quiz data files (quizData.js, JSON assets)
+- **Score Visibility Control**
+  - Students do not see scores immediately
+  - Displays:
+    > *“Your answers have been submitted. Please wait for the instructor to release the results.”*
 
-The core logic and state complexity lives in View_Quiz.jsx, so most insights are centered there.
+---
 
-🧠 STATE MANAGEMENT INSIGHTS (useState)
-View_Quiz.jsx
-quiz
+### 🛠 Instructor Features
 
-Purpose
+- **View Student Results**
+  - Student Name
+  - Score
+  - Number of Violations
+  - Submission Date and Time
 
-Stores the full quiz object (questions, options, correct answers)
+- **Release Results**
+  - Instructor releases results via a button
+  - Student dashboards update automatically
+  - Scores become visible after release
 
-How it’s used
+---
 
-Initialized after loading quiz data
+> The core quiz logic (timer, navigation, violations, submission) is handled in **View_Quiz.jsx**.
 
-Acts as the single source of truth for rendering questions
+---
 
-Why it matters
+## 🔄 Application Flow
 
-Prevents repeated data fetching
+1. Student opens the application  
+2. System checks if the quiz was already taken  
+3. Student starts the quiz  
+4. Timer and tab monitoring begin  
+5. Violations are logged if focus changes  
+6. Quiz is submitted manually or automatically  
+7. Results are stored  
+8. Instructor reviews submissions  
+9. Instructor releases results  
+10. Student views final score  
 
-Allows question navigation without data loss
+---
 
-currentPage
+## 👨‍👩‍👧‍👦 Team Members
 
-Purpose
+| Name |  
+|------|------|
+| Manansala, Ever Mae | 
+| Mañibo, Rhalp | 
+| Matavia, Angelo | 
+| Navarette, Kurt Eris |
+| Olivo, Paul Emmanuel | 
+| Omboy, Maria Princes |  
+| Pelone, John Dave | 
+| Petilla, Clarisse Jane | 
 
-Tracks the current question index
+---
 
-How it’s updated
+## ❓ Frequently Asked Questions (FAQs)
 
-Incremented / decremented via navigation handlers
+### 1. What is the purpose of this application?
+This application was developed to provide a secure and structured online quiz system where students can take quizzes while instructors manage and release results.
 
-Why it matters
+---
 
-Enables pagination logic
+### 2. Who can use this system?
+The system supports two user roles:
+- **Students**, who can take quizzes and wait for results
+- **Instructors (Admin)**, who can monitor submissions and release scores
 
-Prevents rendering multiple questions at once
+---
 
-answers
+### 3. How does the system prevent quiz retakes?
+The application checks if a student has already completed the quiz using **localStorage** or a mock backend. If a quiz attempt already exists, the student is blocked from retaking the quiz.
 
-Purpose
+---
 
-Stores user-selected answers per question
-(key = question index, value = selected option)
+### 4. Why can’t students see their scores immediately after submitting?
+To ensure fairness and consistency, quiz results are only shown after the **instructor releases the results**. Until then, students will see a pending status message.
 
-How it’s updated
+---
 
-Updated immutably when the user selects an option
+### 5. How does tab-switch or focus detection work?
+The system listens for browser focus and visibility changes. When a student switches tabs or minimizes the browser:
+- A warning popup is displayed
+- The action is recorded as a violation
+- Reaching a set violation limit will automatically submit the quiz
 
-Why it matters
+---
 
-Allows answer persistence when navigating between questions
+### 6. What happens when the violation limit is reached?
+Once the violation threshold (e.g., 3 violations) is reached, the quiz is **automatically submitted** to prevent further misconduct.
 
-Makes quiz submission and validation possible
+---
 
-timeRemaining
+### 7. Is a backend server required to run this project?
+No. The project can run using a **local JSON file** and **localStorage** as a mock backend. However, it can be extended with a real backend if needed.
 
-Purpose
+---
 
-Countdown timer value (seconds)
+### 8. What technologies were used to build this project?
+- React.js  
+- Vite  
+- React Hooks for state management  
 
-How it’s updated
+---
 
-Decrements via setInterval inside useEffect
 
-Why it matters
+### 11. Can this project be extended in the future?
+Yes. The system was designed with scalability in mind and can be enhanced in the future by adding more features, improving data handling, or integrating a full backend service if required.
 
-Enables time-limited quizzes
+---
 
-Triggers auto-submit or lock when time expires
 
-tabSwitchCount
 
-Purpose
 
-Tracks how many times the user leaves the tab
 
-How it’s updated
-
-Incremented on visibilitychange event
-
-Why it matters
-
-Anti-cheating mechanism
-
-Can auto-submit or disqualify after threshold
-
-isFinished
-
-Purpose
-
-Flags whether the quiz is completed
-
-How it’s updated
-
-Set to true on submission or timeout
-
-Why it matters
-
-Prevents further interaction
-
-Switches UI to results mode
-
-🧠 Add_Quiz.jsx / Update_Quiz.jsx (Form State)
-Form-related states
-
-Examples:
-
-quiz title
-
-questions array
-
-options
-
-correct answer index
-
-Purpose
-
-Controls form inputs
-
-Ensures controlled components
-
-Why it matters
-
-Prevents uncontrolled input bugs
-
-Enables validation before submit
-
-🎯 HANDLER FUNCTIONS (Event Logic)
-View_Quiz.jsx
-handleAnswerSelect(questionIndex, option)
-
-Triggered by
-
-Clicking an answer option
-
-What it does
-
-Updates answers state immutably
-
-Impact
-
-Records user input without mutating state
-
-Ensures React re-render consistency
-
-handleNext() / handlePrev()
-
-Triggered by
-
-Navigation buttons
-
-What they do
-
-Adjust currentPage
-
-Prevent overflow (first / last question)
-
-Impact
-
-Smooth quiz navigation
-
-Prevents index out-of-bounds errors
-
-handleSubmit()
-
-Triggered by
-
-Submit button or timer expiration
-
-What it does
-
-Finalizes quiz
-
-Sets isFinished
-
-Stops timers and listeners
-
-Impact
-
-Locks quiz state
-
-Prevents further changes to answers
-
-handleVisibilityChange()
-
-Triggered by
-
-Browser tab switch
-
-What it does
-
-Increments tabSwitchCount
-
-Optionally auto-submits quiz
-
-Impact
-
-Anti-cheating logic
-
-Enforces quiz rules without backend dependency
-
-Add / Update Quiz Handlers
-handleInputChange
-
-Purpose
-
-Updates form field state
-
-handleAddQuestion
-
-Purpose
-
-Appends a new question object
-
-handleUpdateQuestion
-
-Purpose
-
-Modifies existing question data
-
-handleSaveQuiz
-
-Purpose
-
-Validates and persists quiz data
-
-⚠️ ERROR HANDLING & SAFETY LOGIC
-Defensive Rendering
-
-Components check if quiz exists before rendering
-
-Prevents undefined access crashes
-
-Timer Cleanup
-
-clearInterval used in useEffect cleanup
-
-Why this matters
-
-Prevents memory leaks
-
-Prevents multiple timers running in parallel
-
-Navigation Bounds Checking
-
-currentPage is clamped
-
-Prevents invalid array access
-
-Input Validation (Forms)
-
-Ensures required fields exist
-
-Prevents saving incomplete quizzes
