@@ -1,14 +1,14 @@
-# 📘 DCIT 26 – Online Quiz Application
+# Online Quiz Application
 
-## 📝 Project Description
+## Project Description
 
-The **Online Quiz Application** is a web-based system developed as a final project for **DCIT 26**. It allows students to take a timed quiz under controlled conditions while enabling instructors to manage quiz results and release scores when appropriate.
+The **Online Quiz Application** is a web-based system that allows students to take a timed quiz under controlled conditions while enabling instructors to manage quiz results and release scores when appropriate.
 
 The application emphasizes **academic integrity**, **user role separation**, and **clean UI/UX**, using modern web technologies such as **React**, **Vite**, and **TailwindCSS**.
 
 ---
 
-## 🎯 Project Objectives
+##  Project Objectives
 
 - Build a functional quiz system using React
 - Prevent quiz retakes and minimize cheating behavior
@@ -18,25 +18,25 @@ The application emphasizes **academic integrity**, **user role separation**, and
 
 ---
 
-## 👥 User Roles
+##  User Roles
 
-### 👨‍🎓 Student
+###  Student
 - Take a timed quiz
 - Answer questions loaded from a local JSON or mock backend
 - Receive warnings when switching browser tabs or minimizing the window
 - Auto-submit the quiz after excessive violations
 - Wait for instructor approval before viewing scores
 
-### 👩‍🏫 Instructor (Admin)
+###  Instructor (Admin)
 - View student quiz submissions
 - Monitor scores, violations, and submission timestamps
 - Release quiz results to students
 
 ---
 
-## ✨ Core Features
+##  Core Features
 
-### 🧠 Student Features
+###  Student Features
 
 - **Timed Quiz**
   - Visible countdown timer
@@ -60,7 +60,7 @@ The application emphasizes **academic integrity**, **user role separation**, and
 
 ---
 
-### 🛠 Instructor Features
+###  Instructor Features
 
 - **View Student Results**
   - Student Name
@@ -79,7 +79,7 @@ The application emphasizes **academic integrity**, **user role separation**, and
 
 ---
 
-## 🔄 Application Flow
+##  Application Flow
 
 1. Student opens the application  
 2. System checks if the quiz was already taken  
@@ -109,7 +109,7 @@ The application emphasizes **academic integrity**, **user role separation**, and
 
 ---
 
-## ❓ Frequently Asked Questions (FAQs)
+##  Frequently Asked Questions (FAQs)
 
 ### 1. What is the purpose of this application?
 This application was developed to provide a secure and structured online quiz system where students can take quizzes while instructors manage and release results.
