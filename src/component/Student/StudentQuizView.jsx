@@ -96,13 +96,31 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     }, 3000);
   }, []);
 
-  const handleAnswerChange = (questionId, optionIndex) => {
-    const updatedAnswers = {
-      ...answers,
-      [questionId]: optionIndex
-    };
-    setAnswers(updatedAnswers);
-    localStorage.setItem(`quiz_answers_${studentId}_${quizId}`, JSON.stringify(updatedAnswers));
+  const handleAnswerChange = (questionId, value, type) => {
+    if (type === 'field_text') {
+      setAnswers(prev => ({
+        ...prev,
+        [questionId]: value
+      }));
+    } else if (type === 'radio') {
+      setAnswers(prev => ({
+        ...prev,
+        [questionId]: value
+      }));
+    } else if (type === 'checkbox') {
+      setAnswers(prev => {
+        const current = Array.isArray(prev[questionId]) ? prev[questionId] : [];
+        const updated = current.includes(value)
+          ? current.filter(v => v !== value)
+          : [...current, value].sort((a, b) => a - b);
+        return {
+          ...prev,
+          [questionId]: updated
+        };
+      });
+    }
+    // Save to localStorage after update
+    localStorage.setItem(`quiz_answers_${studentId}_${quizId}`, JSON.stringify(answers));
   };
 
   // Get all questions from all pages
@@ -123,8 +141,21 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     let correct = 0;
     
     allQuestions.forEach(q => {
-      if (answers[q.id] === q.correctIndex) {
-        correct++;
+      const userAnswer = answers[q.id];
+      if (q.type === 'radio') {
+        if (userAnswer === q.correctIndex) {
+          correct++;
+        }
+      } else if (q.type === 'checkbox') {
+        const userArr = Array.isArray(userAnswer) ? userAnswer.sort((a, b) => a - b) : [];
+        const correctArr = Array.isArray(q.correctIndex) ? q.correctIndex.sort((a, b) => a - b) : [];
+        if (JSON.stringify(userArr) === JSON.stringify(correctArr)) {
+          correct++;
+        }
+      } else if (q.type === 'field_text') {
+        if (typeof userAnswer === 'string' && userAnswer.trim().toLowerCase() === (q.correctAnswer || '').trim().toLowerCase()) {
+          correct++;
+        }
       }
     });
     
@@ -276,18 +307,31 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
           </h4>
 
           <div className="space-y-3 mb-8">
-            {currentQ.options && currentQ.options.map((option, idx) => (
-              <label key={idx} className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
-                <input
-                  type="radio"
-                  name={`question-${currentQ.id}`}
-                  checked={answers[currentQ.id] === idx}
-                  onChange={() => handleAnswerChange(currentQ.id, idx)}
-                  className="w-4 h-4 text-indigo-600"
-                />
-                <span className="ml-3 text-gray-700">{option}</span>
-              </label>
-            ))}
+            {currentQ.type === 'field_text' ? (
+              <textarea
+                className="w-full border rounded-lg p-4 resize-y min-h-[100px]"
+                value={answers[currentQ.id] || ''}
+                onChange={(e) => handleAnswerChange(currentQ.id, e.target.value, 'field_text')}
+                placeholder="Type your answer here..."
+              />
+            ) : (
+              currentQ.options?.map((option, idx) => (
+                <label key={idx} className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
+                  <input
+                    type={currentQ.type === 'checkbox' ? 'checkbox' : 'radio'}
+                    name={currentQ.type === 'radio' ? `question-${currentQ.id}` : undefined}
+                    checked={
+                      currentQ.type === 'radio'
+                        ? answers[currentQ.id] === idx
+                        : Array.isArray(answers[currentQ.id]) && answers[currentQ.id].includes(idx)
+                    }
+                    onChange={() => handleAnswerChange(currentQ.id, idx, currentQ.type)}
+                    className="w-4 h-4 text-indigo-600"
+                  />
+                  <span className="ml-3 text-gray-700">{option}</span>
+                </label>
+              ))
+            )}
           </div>
 
           <div className="flex gap-4">
