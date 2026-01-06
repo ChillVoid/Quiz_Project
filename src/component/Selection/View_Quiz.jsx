@@ -6,7 +6,6 @@ export const View_Quiz = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'preview';
   const encodedData = searchParams.get('data');
-
   const [quiz, setQuiz] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -14,7 +13,6 @@ export const View_Quiz = () => {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isTerminated, setIsTerminated] = useState(false);
   const [message, setMessage] = useState("");
-
   const timerRef = useRef(null);
 
   // --- 1. THE SUBMIT LOGIC (Locks the quiz) ---
@@ -24,10 +22,8 @@ export const View_Quiz = () => {
       navigate("/dashboard");
       return;
     }
-
     clearInterval(timerRef.current);
     setIsTerminated(true);
-
     const submission = {
       quizId: quiz?.id,
       quizTitle: quiz?.title,
@@ -37,10 +33,8 @@ export const View_Quiz = () => {
       status: isViolation ? `TERMINATED: ${reason}` : "COMPLETED",
       submittedAt: new Date().toLocaleString()
     };
-
     const results = JSON.parse(localStorage.getItem("quiz_results") || "[]");
     localStorage.setItem("quiz_results", JSON.stringify([...results, submission]));
-
     setMessage(isViolation ? `VIOLATION: ${reason}` : "Quiz Submitted!");
     setTimeout(() => navigate("/dashboard"), 3000);
   }, [quiz, answers, tabSwitches, mode, navigate]);
@@ -56,7 +50,6 @@ export const View_Quiz = () => {
         if (saved) loadedQuiz = JSON.parse(saved);
       }
     } catch (e) { console.error(e); }
-
     if (loadedQuiz) {
       // DUE DATE ENFORCEMENT
       if (loadedQuiz.settings?.dueDate && mode === 'take') {
@@ -78,7 +71,6 @@ export const View_Quiz = () => {
   // --- 3. TAB SWITCHING (3 STRIKES) ---
   useEffect(() => {
     if (mode !== 'take' || !quiz || quiz.settings?.allowAltTab || isTerminated) return;
-
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
         setTabSwitches(prev => {
@@ -92,7 +84,6 @@ export const View_Quiz = () => {
         });
       }
     };
-
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [quiz, mode, isTerminated, handleSubmit]);
@@ -100,7 +91,6 @@ export const View_Quiz = () => {
   // --- 4. TIMER ---
   useEffect(() => {
     if (mode !== 'take' || !quiz || timeRemaining <= 0 || isTerminated) return;
-
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
@@ -117,7 +107,7 @@ export const View_Quiz = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 p-4 md:p-10 flex flex-col items-center text-slate-100">
-      
+     
       {/* RESTRICTION HUD */}
       <div className="w-full max-w-4xl bg-slate-800 p-4 rounded-t-xl border-b border-slate-700 flex justify-between items-center shadow-2xl">
         <div className="flex gap-4">
@@ -130,14 +120,13 @@ export const View_Quiz = () => {
             </div>
           )}
         </div>
-        
+       
         {mode === 'take' && (
           <div className={`text-xl font-mono font-bold ${timeRemaining < 60 ? 'text-red-500 animate-pulse' : 'text-indigo-400'}`}>
             {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
           </div>
         )}
       </div>
-
       {/* QUIZ CONTENT */}
       <div className={`bg-white text-slate-900 p-8 rounded-b-xl shadow-2xl w-full max-w-4xl transition-all ${isTerminated ? "opacity-40 grayscale pointer-events-none" : ""}`}>
         {message && (
@@ -146,28 +135,38 @@ export const View_Quiz = () => {
             {isTerminated && <button onClick={() => navigate("/dashboard")} className="text-xs underline">Return to Dashboard</button>}
           </div>
         )}
-
         <header className="mb-8">
           <h1 className="text-3xl font-black">{quiz.title}</h1>
           <p className="text-slate-500">{quiz.pages[currentPage].title}</p>
         </header>
-
         <div className="space-y-8">
           {quiz.pages[currentPage].questions.map((q, qi) => (
             <div key={qi} className="p-4 border border-slate-100 rounded-lg">
               <p className="font-bold mb-4">{qi + 1}. {q.question}</p>
-              {/* Question rendering logic... (same as your previous code) */}
               {q.type === 'field_text' ? (
-                <input 
-                  type="text" 
-                  className="w-full border-b-2 p-2 outline-none focus:border-indigo-500" 
+                <textarea
+                  className="w-full border-b-2 p-2 outline-none focus:border-indigo-500 resize-y"
+                  rows={3}
                   onChange={(e) => setAnswers({...answers, [`${currentPage}-${qi}`]: e.target.value})}
                 />
               ) : (
                 <div className="grid gap-2">
                   {q.options.map((opt, oi) => (
                     <label key={oi} className="flex gap-3 p-3 border rounded-md hover:bg-slate-50 cursor-pointer">
-                      <input type={q.type} name={`q-${qi}`} onChange={() => setAnswers({...answers, [`${currentPage}-${qi}`]: oi})} />
+                      <input
+                        type={q.type}
+                        checked={q.type === 'radio' ? answers[`${currentPage}-${qi}`] === oi : Array.isArray(answers[`${currentPage}-${qi}`]) && answers[`${currentPage}-${qi}`].includes(oi)}
+                        onChange={() => {
+                          const key = `${currentPage}-${qi}`;
+                          if (q.type === 'radio') {
+                            setAnswers({...answers, [key]: oi});
+                          } else if (q.type === 'checkbox') {
+                            const curr = Array.isArray(answers[key]) ? answers[key] : [];
+                            const newArr = curr.includes(oi) ? curr.filter(x => x !== oi) : [...curr, oi].sort((a, b) => a - b);
+                            setAnswers({...answers, [key]: newArr});
+                          }
+                        }}
+                      />
                       {opt}
                     </label>
                   ))}
@@ -176,10 +175,9 @@ export const View_Quiz = () => {
             </div>
           ))}
         </div>
-
         <div className="flex justify-between mt-10">
           <button disabled={currentPage === 0} onClick={() => setCurrentPage(c => c - 1)} className="text-slate-400">Back</button>
-          <button 
+          <button
             onClick={() => {
               if (currentPage < quiz.pages.length - 1) setCurrentPage(c => c + 1);
               else handleSubmit();
