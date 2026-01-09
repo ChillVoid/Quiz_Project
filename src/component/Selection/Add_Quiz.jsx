@@ -308,7 +308,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
 
             {/* NEW: Due Date Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
               <input
                 type="datetime-local"
                 value={quizDueDate}
@@ -325,11 +325,11 @@ export const Add_Quiz = ({ onQuizAdded }) => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quiz Description (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quiz Description</label>
               <textarea
                 value={quizDescription}
                 onChange={(e) => setQuizDescription(e.target.value)}
-                placeholder="Enter quiz introduction (Optional)..."
+                placeholder="Enter quiz introduction..."
                 className="w-full px-4 py-3 border rounded-lg h-32 resize-y"
               />
             </div>
