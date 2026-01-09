@@ -15,14 +15,13 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const warningTimeoutRef = useRef(null);
+  const violationCooldownRef = useRef(0);
 
-  // Load quiz data
   useEffect(() => {
     const foundQuiz = quizzes.find(q => q.id === parseInt(quizId));
     if (foundQuiz) {
       setQuiz(foundQuiz);
       
-      // Get all questions from all pages
       const allQuestions = [];
       foundQuiz.pages?.forEach(page => {
         if (page.questions) {
@@ -30,7 +29,6 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
         }
       });
       
-      // Set timer: use duration if available, otherwise use settings.timeLimit
       const timeInSeconds = (foundQuiz.duration || foundQuiz.settings?.timeLimit || 5) * 60;
       setTimeLeft(timeInSeconds);
       
@@ -39,7 +37,6 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     }
   }, [quizId, quizzes, studentId]);
 
-  // Timer effect
   useEffect(() => {
     if (!quiz || quizSubmitted || timeLeft <= 0) return;
 
@@ -56,18 +53,25 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     return () => clearInterval(timer);
   }, [quiz, quizSubmitted, timeLeft]);
 
-  // Tab detection effect
   useEffect(() => {
     if (!quiz || quizSubmitted) return;
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        triggerViolation();
+        const now = Date.now();
+        if (now - violationCooldownRef.current > 500) {
+          triggerViolation();
+          violationCooldownRef.current = now;
+        }
       }
     };
 
     const handleBlur = () => {
-      triggerViolation();
+      const now = Date.now();
+      if (now - violationCooldownRef.current > 500) {
+        triggerViolation();
+        violationCooldownRef.current = now;
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -79,7 +83,6 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     };
   }, [quiz, quizSubmitted]);
 
-  // Auto-submit when violations reach threshold
   useEffect(() => {
     if (violations >= VIOLATION_THRESHOLD && !quizSubmitted && quiz) {
       handleAutoSubmit();
@@ -87,8 +90,13 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
   }, [violations, quizSubmitted, quiz]);
 
   const triggerViolation = useCallback(() => {
+    setViolations(prev => {
+      const newViolations = prev + 1;
+      console.log(`Violation triggered! Total: ${newViolations}/${VIOLATION_THRESHOLD}`);
+      return newViolations;
+    });
+
     setShowViolationWarning(true);
-    setViolations(prev => prev + 1);
 
     if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
     warningTimeoutRef.current = setTimeout(() => {
@@ -123,7 +131,6 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     localStorage.setItem(`quiz_answers_${studentId}_${quizId}`, JSON.stringify(answers));
   };
 
-  // Get all questions from all pages
   const getAllQuestions = () => {
     if (!quiz) return [];
     const allQuestions = [];
@@ -141,6 +148,7 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     let correct = 0;
     
     allQuestions.forEach(q => {
+<<<<<<< Updated upstream
       const userAnswer = answers[q.id];
       if (q.type === 'radio') {
         if (userAnswer === q.correctIndex) {
@@ -154,6 +162,16 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
         }
       } else if (q.type === 'field_text') {
         if (typeof userAnswer === 'string' && userAnswer.trim().toLowerCase() === (q.correctAnswer || '').trim().toLowerCase()) {
+=======
+      if (q.type === "field_text") {
+        const studentAnswer = (answers[q.id] || "").trim().toLowerCase();
+        const correctAnswer = (q.correctAnswer || "").trim().toLowerCase();
+        if (studentAnswer === correctAnswer) {
+          correct++;
+        }
+      } else {
+        if (answers[q.id] === q.correctIndex) {
+>>>>>>> Stashed changes
           correct++;
         }
       }
@@ -307,6 +325,7 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
           </h4>
 
           <div className="space-y-3 mb-8">
+<<<<<<< Updated upstream
             {currentQ.type === 'field_text' ? (
               <textarea
                 className="w-full border rounded-lg p-4 resize-y min-h-[100px]"
@@ -326,6 +345,34 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
                         : Array.isArray(answers[currentQ.id]) && answers[currentQ.id].includes(idx)
                     }
                     onChange={() => handleAnswerChange(currentQ.id, idx, currentQ.type)}
+=======
+            {currentQ.type === "field_text" ? (
+              <input
+                type="text"
+                value={answers[currentQ.id] || ""}
+                onChange={(e) => handleAnswerChange(currentQ.id, e.target.value)}
+                placeholder="Type your answer here..."
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
+              />
+            ) : (
+              currentQ.options && currentQ.options.map((option, idx) => (
+                <label key={idx} className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
+                  <input
+                    type={currentQ.type === "checkbox" ? "checkbox" : "radio"}
+                    name={`question-${currentQ.id}`}
+                    checked={currentQ.type === "checkbox" ? Array.isArray(answers[currentQ.id]) && answers[currentQ.id].includes(idx) : answers[currentQ.id] === idx}
+                    onChange={() => {
+                      if (currentQ.type === "checkbox") {
+                        const current = Array.isArray(answers[currentQ.id]) ? answers[currentQ.id] : [];
+                        const newAnswers = current.includes(idx) 
+                          ? current.filter(i => i !== idx)
+                          : [...current, idx];
+                        handleAnswerChange(currentQ.id, newAnswers);
+                      } else {
+                        handleAnswerChange(currentQ.id, idx);
+                      }
+                    }}
+>>>>>>> Stashed changes
                     className="w-4 h-4 text-indigo-600"
                   />
                   <span className="ml-3 text-gray-700">{option}</span>
