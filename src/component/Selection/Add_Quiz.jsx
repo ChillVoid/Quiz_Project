@@ -6,11 +6,11 @@ export const Add_Quiz = ({ onQuizAdded }) => {
   const [step, setStep] = useState(0);
   const [quizTitle, setQuizTitle] = useState("");
   const [quizDescription, setQuizDescription] = useState("");
-  const [quizDuration, setQuizDuration] = useState(5); // Default: 5 minutes
+  const [quizDuration, setQuizDuration] = useState(5);
+  const [quizDueDate, setQuizDueDate] = useState("");
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Load draft from localStorage on initial render
   const [pages, setPages] = useState(() => {
     const saved = localStorage.getItem("quiz_draft");
     if (saved) {
@@ -28,17 +28,24 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     ];
   });
 
-  // Auto-save draft as user types
   useEffect(() => {
-    localStorage.setItem("quiz_draft", JSON.stringify({ quizTitle, quizDescription, quizDuration, pages }));
-  }, [quizTitle, quizDescription, quizDuration, pages]);
+    localStorage.setItem("quiz_draft", JSON.stringify({ quizTitle, quizDescription, quizDuration, quizDueDate, pages }));
+  }, [quizTitle, quizDescription, quizDuration, quizDueDate, pages]);
 
-  /* == VALIDATION LOGIC == */
   const validateStep1 = () => {
     let newErrors = {};
     if (!quizTitle.trim()) newErrors.title = "Quiz title cannot be empty.";
     if (!quizDuration || quizDuration <= 0) newErrors.duration = "Duration must be at least 1 minute.";
     if (quizDuration > 300) newErrors.duration = "Duration cannot exceed 300 minutes (5 hours).";
+    
+    if (quizDueDate) {
+      const selectedDate = new Date(quizDueDate);
+      const now = new Date();
+      if (selectedDate < now) {
+        newErrors.dueDate = "Due date must be in the future.";
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -62,40 +69,37 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  /* == FINAL PUBLISH HANDLER == */
   const handleFinish = () => {
     if (!validateBuilder()) {
       alert("Please fix the errors in your quiz before publishing.");
       return;
     }
 
-    // 1. Prepare the Final Quiz Data
     const finalQuiz = {
       id: Date.now(),
       title: quizTitle,
       description: quizDescription,
       duration: quizDuration,
+      dueDate: quizDueDate, 
       pages: pages,
       totalQuestions: pages.reduce((sum, p) => sum + (p.questions?.length || 0), 0),
       settings: { 
-        timeLimit: quizDuration, 
+        timeLimit: quizDuration,
+        dueDate: quizDueDate,
         allowAltTab: true,
         createdAt: new Date().toLocaleString()
       }
     };
 
-    // 2. SAVE TO "DATABASE" (LocalStorage global list)
     const existingQuizzes = JSON.parse(localStorage.getItem("global_quizzes") || "[]");
     const updatedQuizzes = [...existingQuizzes, finalQuiz];
     localStorage.setItem("global_quizzes", JSON.stringify(updatedQuizzes));
     
-    // 3. Cleanup
     localStorage.removeItem("quiz_draft");
     sessionStorage.setItem("active_quiz", JSON.stringify(finalQuiz));
 
     alert("✅ Quiz Published Successfully!");
     
-    // 4. Update Parent State & Navigate
     if (onQuizAdded) onQuizAdded();
     navigate("/dashboard"); 
   };
@@ -243,7 +247,6 @@ export const Add_Quiz = ({ onQuizAdded }) => {
 
   const handleDurationChange = (e) => {
     const value = parseInt(e.target.value) || 0;
-    // Automatically clamp between 1 and 300
     if (value < 1) {
       setQuizDuration(1);
     } else if (value > 300) {
@@ -251,6 +254,11 @@ export const Add_Quiz = ({ onQuizAdded }) => {
     } else {
       setQuizDuration(value);
     }
+  };
+
+  const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   };
 
   const page = pages[currentPage];
@@ -297,6 +305,24 @@ export const Add_Quiz = ({ onQuizAdded }) => {
               {errors.duration && <p className="text-red-500 text-sm mt-1">{errors.duration}</p>}
               <p className="text-gray-500 text-xs mt-1">Range: 1-300 minutes (5 hours max)</p>
             </div>
+
+            {/* NEW: Due Date Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date (Optional)</label>
+              <input
+                type="datetime-local"
+                value={quizDueDate}
+                onChange={(e) => setQuizDueDate(e.target.value)}
+                min={getTodayString()}
+                className={`w-full px-4 py-3 border rounded-lg ${errors.dueDate ? "border-red-500" : ""}`}
+              />
+              {errors.dueDate && <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>}
+              {quizDueDate && (
+                <p className="text-gray-600 text-xs mt-1">
+                  Due: {new Date(quizDueDate).toLocaleString()}
+                </p>
+              )}
+            </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Quiz Description (Optional)</label>
@@ -318,7 +344,7 @@ export const Add_Quiz = ({ onQuizAdded }) => {
         {step === 2 && (
           <div className="space-y-6">
             <div className="bg-indigo-100 p-4 rounded-lg text-center font-bold text-indigo-800">
-              Total Quiz Score: {calculateTotalScore()} points | Duration: {quizDuration} minutes
+              Total Quiz Score: {calculateTotalScore()} points | Duration: {quizDuration} minutes {quizDueDate && `| Due: ${new Date(quizDueDate).toLocaleDateString()}`}
             </div>
 
             <div className="flex justify-between items-center mb-4">
