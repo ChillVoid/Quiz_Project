@@ -104,31 +104,13 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     }, 3000);
   }, []);
 
-  const handleAnswerChange = (questionId, value, type) => {
-    if (type === 'field_text') {
-      setAnswers(prev => ({
-        ...prev,
-        [questionId]: value
-      }));
-    } else if (type === 'radio') {
-      setAnswers(prev => ({
-        ...prev,
-        [questionId]: value
-      }));
-    } else if (type === 'checkbox') {
-      setAnswers(prev => {
-        const current = Array.isArray(prev[questionId]) ? prev[questionId] : [];
-        const updated = current.includes(value)
-          ? current.filter(v => v !== value)
-          : [...current, value].sort((a, b) => a - b);
-        return {
-          ...prev,
-          [questionId]: updated
-        };
-      });
-    }
-    // Save to localStorage after update
-    localStorage.setItem(`quiz_answers_${studentId}_${quizId}`, JSON.stringify(answers));
+  const handleAnswerChange = (questionId, optionIndex) => {
+    const updatedAnswers = {
+      ...answers,
+      [questionId]: optionIndex
+    };
+    setAnswers(updatedAnswers);
+    localStorage.setItem(`quiz_answers_${studentId}_${quizId}`, JSON.stringify(updatedAnswers));
   };
 
   const getAllQuestions = () => {
@@ -148,30 +130,16 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
     let correct = 0;
     
     allQuestions.forEach(q => {
-<<<<<<< Updated upstream
-      const userAnswer = answers[q.id];
-      if (q.type === 'radio') {
-        if (userAnswer === q.correctIndex) {
-          correct++;
-        }
-      } else if (q.type === 'checkbox') {
-        const userArr = Array.isArray(userAnswer) ? userAnswer.sort((a, b) => a - b) : [];
-        const correctArr = Array.isArray(q.correctIndex) ? q.correctIndex.sort((a, b) => a - b) : [];
-        if (JSON.stringify(userArr) === JSON.stringify(correctArr)) {
-          correct++;
-        }
-      } else if (q.type === 'field_text') {
-        if (typeof userAnswer === 'string' && userAnswer.trim().toLowerCase() === (q.correctAnswer || '').trim().toLowerCase()) {
-=======
       if (q.type === "field_text") {
+        // For short answer: compare text (case-insensitive and trimmed)
         const studentAnswer = (answers[q.id] || "").trim().toLowerCase();
         const correctAnswer = (q.correctAnswer || "").trim().toLowerCase();
         if (studentAnswer === correctAnswer) {
           correct++;
         }
       } else {
+        // For multiple choice and checkbox: compare by index
         if (answers[q.id] === q.correctIndex) {
->>>>>>> Stashed changes
           correct++;
         }
       }
@@ -325,28 +293,8 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
           </h4>
 
           <div className="space-y-3 mb-8">
-<<<<<<< Updated upstream
-            {currentQ.type === 'field_text' ? (
-              <textarea
-                className="w-full border rounded-lg p-4 resize-y min-h-[100px]"
-                value={answers[currentQ.id] || ''}
-                onChange={(e) => handleAnswerChange(currentQ.id, e.target.value, 'field_text')}
-                placeholder="Type your answer here..."
-              />
-            ) : (
-              currentQ.options?.map((option, idx) => (
-                <label key={idx} className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
-                  <input
-                    type={currentQ.type === 'checkbox' ? 'checkbox' : 'radio'}
-                    name={currentQ.type === 'radio' ? `question-${currentQ.id}` : undefined}
-                    checked={
-                      currentQ.type === 'radio'
-                        ? answers[currentQ.id] === idx
-                        : Array.isArray(answers[currentQ.id]) && answers[currentQ.id].includes(idx)
-                    }
-                    onChange={() => handleAnswerChange(currentQ.id, idx, currentQ.type)}
-=======
             {currentQ.type === "field_text" ? (
+              // SHORT ANSWER TEXT INPUT
               <input
                 type="text"
                 value={answers[currentQ.id] || ""}
@@ -355,6 +303,7 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
               />
             ) : (
+              // MULTIPLE CHOICE / CHECKBOXES
               currentQ.options && currentQ.options.map((option, idx) => (
                 <label key={idx} className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
                   <input
@@ -372,7 +321,6 @@ export const StudentQuizView = ({ quizzes, studentName, studentId }) => {
                         handleAnswerChange(currentQ.id, idx);
                       }
                     }}
->>>>>>> Stashed changes
                     className="w-4 h-4 text-indigo-600"
                   />
                   <span className="ml-3 text-gray-700">{option}</span>
