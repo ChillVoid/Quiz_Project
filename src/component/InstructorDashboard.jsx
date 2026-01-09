@@ -6,12 +6,10 @@ export const InstructorDashboard = () => {
   const [filterViolations, setFilterViolations] = useState(false);
 
   useEffect(() => {
-    // Load all quiz results from localStorage
     const results = JSON.parse(localStorage.getItem("all_quiz_results") || "[]");
     setAllResults(results);
   }, []);
 
-  // Get unique quizzes from results
   const getUniqueQuizzes = () => {
     const uniqueQuizzes = [...new Set(allResults.map(r => r.quizId))];
     return uniqueQuizzes.map(id => {
@@ -37,9 +35,9 @@ export const InstructorDashboard = () => {
     return filtered;
   };
 
-  const handleReleaseScores = (quizId) => {
+  const handleReleaseAll = () => {
     const updatedResults = allResults.map(result => {
-      if (result.quizId === quizId) {
+      if (selectedQuiz === null || result.quizId === selectedQuiz) {
         return { ...result, scoreReleased: true };
       }
       return result;
@@ -47,12 +45,16 @@ export const InstructorDashboard = () => {
 
     setAllResults(updatedResults);
     localStorage.setItem("all_quiz_results", JSON.stringify(updatedResults));
-    alert(`✓ Scores released for all students on Quiz ID: ${quizId}`);
+    
+    const quizName = selectedQuiz 
+      ? getUniqueQuizzes().find(q => q.id === selectedQuiz)?.title 
+      : "all quizzes";
+    alert(`✓ Scores released for ${quizName}!`);
   };
 
-  const handleHideScores = (quizId) => {
+  const handleHideAll = () => {
     const updatedResults = allResults.map(result => {
-      if (result.quizId === quizId) {
+      if (selectedQuiz === null || result.quizId === selectedQuiz) {
         return { ...result, scoreReleased: false };
       }
       return result;
@@ -60,7 +62,11 @@ export const InstructorDashboard = () => {
 
     setAllResults(updatedResults);
     localStorage.setItem("all_quiz_results", JSON.stringify(updatedResults));
-    alert(`✓ Scores hidden for all students on Quiz ID: ${quizId}`);
+    
+    const quizName = selectedQuiz 
+      ? getUniqueQuizzes().find(q => q.id === selectedQuiz)?.title 
+      : "all quizzes";
+    alert(`✓ Scores hidden for ${quizName}!`);
   };
 
   const resultsToDisplay = getResultsForQuiz(selectedQuiz);
@@ -75,7 +81,7 @@ export const InstructorDashboard = () => {
 
       {/* Filters Section */}
       <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Quiz:</label>
             <select
@@ -102,6 +108,22 @@ export const InstructorDashboard = () => {
               <span className="ml-2 text-sm font-medium text-gray-700">Show Only Violations (≥1)</span>
             </label>
           </div>
+          
+          {/* NEW: Release All / Hide All Buttons */}
+          <div className="flex gap-2 items-end">
+            <button
+              onClick={handleReleaseAll}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
+            >
+              Release All
+            </button>
+            <button
+              onClick={handleHideAll}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
+            >
+              Hide All
+            </button>
+          </div>
         </div>
       </div>
 
@@ -124,7 +146,6 @@ export const InstructorDashboard = () => {
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Violations</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Submitted At</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,23 +182,6 @@ export const InstructorDashboard = () => {
                         <span className="inline-block bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">
                           ⏳ Hidden
                         </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {result.scoreReleased ? (
-                        <button
-                          onClick={() => handleHideScores(result.quizId)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition"
-                        >
-                          Hide
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleReleaseScores(result.quizId)}
-                          className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition"
-                        >
-                          Release
-                        </button>
                       )}
                     </td>
                   </tr>
