@@ -1,17 +1,36 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const StudentNavbar = ({ onLogout, userName }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const navItems = [
-    { path: "/student-dashboard", label: "Manage Quizzes" },
-    { path: "/student-results", label: "My Results" },
-  ];
+  const isQuizPage = location.pathname.startsWith("/student-quiz/");
+
+  const handleManageQuizzesClick = () => {
+    // If on My Results page, navigate to student dashboard first
+    if (location.pathname === "/student-results") {
+      navigate("/student-dashboard");
+      setTimeout(() => {
+        if (window.handleManageQuizzesScroll) {
+          window.handleManageQuizzesScroll();
+        }
+      }, 100);
+    } else {
+      // Already on dashboard, just scroll to quizzes
+      if (window.handleManageQuizzesScroll) {
+        window.handleManageQuizzesScroll();
+      }
+    }
+  };
 
   const handleLogoutClick = () => {
     onLogout();
     navigate("/");
   };
+
+  if (isQuizPage) {
+    return null;
+  }
 
   return (
     <nav className="bg-white text-black p-4 shadow-md flex flex-col md:flex-row items-center justify-between">
@@ -25,16 +44,22 @@ export const StudentNavbar = ({ onLogout, userName }) => {
       <div className="flex flex-col md:flex-row items-center gap-6 flex-1 justify-center">
         <p className="text-sm text-gray-600">Welcome, {userName}</p>
         <ul className="flex flex-col md:flex-row gap-4">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <button
-                onClick={() => navigate(item.path)}
-                className="px-4 py-2 rounded-lg transition hover:bg-blue-300 text-gray-600 hover:text-black"
-              >
-                {item.label}
-              </button>
-            </li>
-          ))}
+          <li>
+            <button
+              onClick={handleManageQuizzesClick}
+              className="px-4 py-2 rounded-lg transition hover:bg-blue-300 text-gray-600 hover:text-black"
+            >
+              Manage Quizzes
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => navigate("/student-results")}
+              className="px-4 py-2 rounded-lg transition hover:bg-blue-300 text-gray-600 hover:text-black"
+            >
+              My Results
+            </button>
+          </li>
         </ul>
       </div>
 
